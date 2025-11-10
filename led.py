@@ -16,14 +16,9 @@ class Led:
 		pwm.stop()
 
 
-	def e_handler(self):
-		if self.brightness <=1 or self.brightness >= 98:
-			return True
-		else:
-			return False
-
 	def breath(self):
 		pass
+
 
 
 if __name__ == '__main__':

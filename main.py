@@ -2,6 +2,7 @@
 
 from motor import Stepper
 from led import Led
+from display import DisplayGUI
 
 # Circuit Python Implementation for I2C Access
 import board
@@ -19,7 +20,7 @@ vl53 = adafruit_vl53l0x.VL53L0X(i2c)
 sensors = []
 
 
-# Display
+# Display object setup
 disp = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)
 
 # Motors
@@ -30,8 +31,19 @@ motor2 = Stepper([0,0,0,0])
 def main():
 	t1 = Thread(target=motor1.start)
 	t2 = Thread(target=motor2.start)
+
+	# Pass display object to GUI Wrapper that contains neat functions to output to display
+	GUI = DisplayGUI(disp)
 	while True:
-		pass
+		if input("Run? (y/n)") == 'y':
+			motor1.running = True
+			motor2.running = True
+		else:
+			motor1.running = False
+			motor2.running = False
+			break
+		GUI.writeMessage()
+	
 
 
 	t1.join()

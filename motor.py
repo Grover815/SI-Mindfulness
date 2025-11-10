@@ -14,7 +14,8 @@ class Stepper:
 	# Initializing Instance Variables 
 	def __init__(self, pins):
 		self.pins = pins # [a1, a2, b1, b2] input as list
-		self.run = False # Current state of motor
+		self.running = False # Current state of motor
+		self.active = True # State of motor being able to move (i.e. in the start loop)
 		self.clockwise = True # Current direction of motor
 		self.speed = 0 # Current speed of motor
 		self.step = 0 # Current total step of motor 
@@ -51,10 +52,9 @@ class Stepper:
 
 	# Indefinetly run move()
 	def start(self):
-		while self.run:
-			self.move()
-			if self.error:
-				break
+		while self.active:
+			if self.running:
+				self.move()
 		return "Motor Encountered Error"
 
 

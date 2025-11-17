@@ -21,7 +21,7 @@ sensors = []
 
 
 # Display object setup
-disp = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)
+disp = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c)
 
 # Motors
 motor1 = Stepper([0,0,0,0])

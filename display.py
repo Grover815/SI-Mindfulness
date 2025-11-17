@@ -1,6 +1,9 @@
 # display.py
 from PIL import Image, ImageDraw, ImageFont
 import time
+import board
+import busio
+import adafruit_ssd1306
 
 class DisplayGUI():
 
@@ -76,3 +79,8 @@ class DisplayGUI():
 			self.disp.image(image)
 			self.disp.show()
 			time.sleep(0.1)
+if __name__ == 'main':
+	i2c = busio.I2C(board.SCL,board.SDA)
+	disp = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)
+	GUI = DisplayGUI(disp)
+	GUI.writeMessage('Hello World!')

@@ -4,20 +4,11 @@ import board
 import busio
 import adafruit_vl53l0x
 from time import sleep
+import math
 
 
 #Initiliaze I2C
 i2c = busio.I2C(board.SCL,board.SDA)
-
-# Distance Sensor List
-
-
-# Shutdown Pins needed
-
-
-
-
-
 
 
 class Gesture():
@@ -30,6 +21,7 @@ class Gesture():
 		self.position = [0 for i in range(0,len(xshut))]
 		self.time = [0 for i in range(0,len(xshut))]
 		self.speed = 0
+		self.direction = 0 # 0 for left, 1 for right
 		GPIO.setmode(GPIO.BCM)
 		for i in range(0,len(xShut)):
 			GPIO.setup(xShut[i], GPIO.OUT, initial=GPIO.LOW)
@@ -53,10 +45,25 @@ class Gesture():
 			if is_valid(distance):
 				self.position[i] = 1
 				self.time = time.time()
-		return position
+
+	def direction(self):
+		self.direction = 1 if (self.position[0]-self.position[-1] < 0) else 0
 
 	def speed(self):
-		
+		self.direction()
+		self.speed = math.abs(self.position[0]-self.position[-1])
+
+
+	def update(self):
+		ret = True
+		try:
+			self.position()
+			self.direction()
+			self.speed()
+		except:
+			ret = False
+		return ret
+
 
 	def stop():
 		for sensor in vl53:
@@ -68,8 +75,9 @@ if __name__ == 'main':
 	wave = Gesture(pins,i2c)
 	try:
 		while True:
-			print(wave.position())
+			wave.update()
+			print(wave.position)
 	except KeyboardInterrupt:
-		stop_continuous()
-		print("Program Terminated by User.")
+		wave.stop()
 		GPIO.cleanup()
+		print("Program Terminated by User.")

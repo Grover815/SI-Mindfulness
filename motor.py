@@ -23,13 +23,14 @@ class Stepper:
 
 		# GPIO Pin Setup
 		GPIO.setmode(GPIO.BCM)
-		for pin in pins:
+		print(self.pins)
+		for pin in self.pins:
 			GPIO.setup(pin,GPIO.OUT)
 
 
 	# determines sleep time (s) based on the speed of the motor in rpm
 	def slp(self):
-		return 1/(200*self.speed*60)
+		return 1/(200*self.speed)
 
 	# determines direction by travering FSL backwards (-1) or forwards (1)
 	def direction(self):
@@ -37,16 +38,17 @@ class Stepper:
 
 	# Move function moves the motor one step
 	def move(self):
-		GPIO.output(self.pins,FSL[self.direction()*(self.step%len(FSL))]) # outputs to each motor pin the logic table entry based on the mod (%) of the total self.step
-		self.step+=1
-		sleep(self.slp())
+                GPIO.output(self.pins,self.FSL[self.direction()*(self.step%len(self.FSL))]) # outputs to each motor pin the logic table entry based on the mod (%) of the total self.step
+                print(self.FSL[self.direction()*(self.step%len(self.FSL))])
+                self.step+=1
+                sleep(self.slp())
 
 	# stop function
 	def stop(self):
 		self.run = False
 
 	# Function to call move() N amount of times
-	def step(self,n):
+	def steps(self,n):
 		for i in range(0,n):
 			self.move()
 
@@ -62,23 +64,28 @@ class Stepper:
 # this will not trigger when imported into another file
 # this isolation provides a good way to test the motor
 if __name__ == '__main__':
-	print("~Motor Test~")
-	pins = ["A1","A2",'B1',"B2"]
-	for i in range(0,3):
-		pins[i] = input(f"Pin {pins[i]}: ")
-	motor = Stepper(pins)
-	try:
-		newSpeed = True
-		while True:
-			if newSpeed:
-				motor.speed = input("Speed (rpm): ")
-				newSpeed = False
-			motor.move(200) # 200 steps to complete a full rotation
-			print("One Rotation Complete")
-			if input("Change Speed (y/n): ") == 'y':
-				newSpeed= True
-	except KeyboardInterrupt:
-		print(f"Total Steps: {motor.step}")
-		print("Motor Test Terminated by User.")
-		motor.stop()
-		GPIO.cleanup()
+        print("~Motor Test~")
+        pins = (12,16,21,20)
+        #pins = ["A1","A2",'B1',"B2"]
+        #for i in range(0,4):
+        #        pins[i] = int(input(f"Pin {pins[i]}: "))
+        motor = Stepper(pins)
+        try:
+                newSpeed = True
+                while True:
+                        if newSpeed:
+                                motor.speed = int(input("Speed (rpm): "))
+                                newSpeed = False
+                                print(motor.slp())
+                        motor.steps(200)
+                        print("One Rotation Complete")
+                        if input("Change Speed (y/n): ") == 'y':
+                                newSpeed= True
+                        else:
+                                newSpeed = False
+                print("Done.")
+        except KeyboardInterrupt:
+                print(f"Total Steps: {motor.step}")
+                print("Motor Test Terminated by User.")
+                motor.stop()
+                GPIO.cleanup()

@@ -10,46 +10,63 @@ import busio
 import adafruit_vl53l0x
 import adafruit_ssd1306
 
-from multiprocessing import Process
+from multiprocessing import Process, Pipe#, Event # event use maybe to turn off motors as seen in conditiontest.py
 
-#Initiliaze I2C
-i2c = busio.I2C(board.SCL,board.SDA)
+# Distance sensors
+xshut = []
 
-# Distance Sensors
-vl53 = adafruit_vl53l0x.VL53L0X(i2c)
-sensors = []
-
-
-# Display object setup
-disp = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c)
-
-# Motors
-motor1 = Stepper([0,0,0,0])
-motor2 = Stepper([0,0,0,0])
-
-# Pass display object to GUI Wrapper that contains neat functions to output to display
-#GUI = DisplayGUI(disp)
+# LED's
+leds = []
 
 
 def main():
-	p1 = Process(target=motor1.start)
+	#Initiliaze I2C
+	i2c = busio.I2C(board.SCL,board.SDA)
+
+	# Display object setup
+	disp = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c)
+
+
+	# Data pipes
+	motor1_parent,motor1_child = Pipe()
+	motor2_parent,motor2_child = Pipe()
+
+
+	# Motors
+	motor1 = Stepper([0,0,0,0],motor1_child)
+	motor2 = Stepper([0,0,0,0],motor2_child)
+
+
+	wave = Gesture(xshut,i2c)
+
+	# Pass display object to GUI Wrapper that contains neat functions to output to display
+	GUI = DisplayGUI(disp)
+
+	#LED
+	for i in range(0,len(led)):
+		leds[i] = Led(led)
+
+
+	p1 = Process(target=motor1.run)
 	p1.start()
-	p2 = Process(target=motor2.start)
+	p2 = Process(target=motor2.run)
 	p2.start()
 
-	while True:
-		if input("Run? (y/n)") == 'y':
-			motor1.running = True
-			motor2.running = True
-		else:
-			motor1.running = False
-			motor2.running = False
-			break
-	
+	try:
+		while True:
+			if input("Run? (y/n)") == 'n':
+				motor1_parent.send("END")
+				motor2_parent.send("END")
+			motor1_parent.send(int(input("Motor 1 Speed? ")))
+			motor2_parent.send(int(input("Motor 2 Speed? ")))				
+	except KeyboardInterrupt:
+		p1.terminate()
+		p1.join()
+		p2.terminate()
+		p2.join()
+		print("User terminated.")
 
 
-	p1.join()
-	p2.join()
 
 
 

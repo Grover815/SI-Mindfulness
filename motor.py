@@ -12,14 +12,15 @@ class Stepper:
 
 
 	# Initializing Instance Variables 
-	def __init__(self, pins):
+	def __init__(self,pins,connection):
 		self.pins = pins # [a1, a2, b1, b2] input as list
-		self.running = False # Current state of motor
-		self.active = True # State of motor being able to move (i.e. in the start loop)
+		self.running = True # Current state of motor
 		self.clockwise = True # Current direction of motor
 		self.speed = 0 # Current speed of motor
 		self.step = 0 # Current total step of motor 
 		self.error = False # Error handling
+		self.coast = True
+		self.conn = connection
 
 		# GPIO Pin Setup
 		GPIO.setmode(GPIO.BCM)
@@ -38,10 +39,10 @@ class Stepper:
 
 	# Move function moves the motor one step
 	def move(self):
-                GPIO.output(self.pins,self.FSL[self.direction()*(self.step%len(self.FSL))]) # outputs to each motor pin the logic table entry based on the mod (%) of the total self.step
-                print(self.FSL[self.direction()*(self.step%len(self.FSL))])
-                self.step+=1
-                sleep(self.slp())
+		GPIO.output(self.pins,self.FSL[self.direction()*(self.step%len(self.FSL))]) # outputs to each motor pin the logic table entry based on the mod (%) of the total self.step
+		print(self.FSL[self.direction()*(self.step%len(self.FSL))])
+		self.step+=1
+		sleep(self.slp())
 
 	# stop function
 	def stop(self):
@@ -54,38 +55,45 @@ class Stepper:
 
 	# Indefinetly run move()
 	def start(self):
-		while self.active:
-			if self.running:
+		while self.running: # not self.runninng.is_set()
+			self.move()
+			if self.coast:
+				self.speed -= 0.1 # Deacceleration strategry?
+			if self.speed <= 0.5:
+				break
+		print("Motor stopped.")
+
+	# Multiprocessing implementation of start()
+	def run(self):
+		while True:
+			if self.speed>= 0.5:
 				self.move()
-		return "Motor Encountered Error"
+			if self.conn.poll():
+				msg = self.conn.recv()
+				if msg == "END":
+				    break
+				if type(msg) == int: # More validation on speed input? In main logic perhaps
+					self.speed = msg
+		self.conn.close()
 
 
 # this if statement is only run if the python file is run directly from terminal using python motor.py
 # this will not trigger when imported into another file
 # this isolation provides a good way to test the motor
 if __name__ == '__main__':
-        print("~Motor Test~")
-        pins = (12,16,21,20)
-        #pins = ["A1","A2",'B1',"B2"]
-        #for i in range(0,4):
-        #        pins[i] = int(input(f"Pin {pins[i]}: "))
-        motor = Stepper(pins)
-        try:
-                newSpeed = True
-                while True:
-                        if newSpeed:
-                                motor.speed = int(input("Speed (rpm): "))
-                                newSpeed = False
-                                print(motor.slp())
-                        motor.steps(200)
-                        print("One Rotation Complete")
-                        if input("Change Speed (y/n): ") == 'y':
-                                newSpeed= True
-                        else:
-                                newSpeed = False
-                print("Done.")
-        except KeyboardInterrupt:
-                print(f"Total Steps: {motor.step}")
-                print("Motor Test Terminated by User.")
-                motor.stop()
-                GPIO.cleanup()
+	from multiprocessing import
+	print("~Motor Test~")
+	pins = (12,16,21,20)
+	#pins = ["A1","A2",'B1',"B2"]
+	#for i in range(0,4):
+	#        pins[i] = int(input(f"Pin {pins[i]}: "))
+		motor = Stepper(pins, True)
+	try:
+		motor.speed = int(input("Speed (rpm): "))
+		print(motor.slp())
+		motor.start() # Test if deacceleration of motors work with coasting variable !!
+	except KeyboardInterrupt:
+		print(f"Total Steps: {motor.step}")
+		print("Motor Test Terminated by User.")
+		motor.stop()
+		GPIO.cleanup()

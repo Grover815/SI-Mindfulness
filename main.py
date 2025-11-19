@@ -52,7 +52,7 @@ def main():
 	p1.start()
 	p2 = Process(target=motor2.run)
 	p2.start()
-	#GUI.writeMessage("Resistance makes success worthwhile.")
+	GUI.writeMessage(0)
 	try:
 		while True:
 			if input("Run? (y/n)") == 'n':

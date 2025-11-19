@@ -17,6 +17,9 @@ class DisplayGUI():
 	# Function to write message
 	def writeMessage(self,message):
 		'''Takes in one of our mindfullness messages and displays it indefinately'''
+		messages = ["Resistance makes\nsuccess worthwhile.","I am capablre of succedding.","This too shall pass.","Everything is as it is.",
+		"Quite the mind and the soul will speak."
+		"My grades do not define me."]
 		# Clear display.
 		self.disp.fill(0)
 		self.disp.show()
@@ -37,7 +40,7 @@ class DisplayGUI():
 		while True:
 			# Draw a black filled box to clear the image.
 			draw.rectangle((0, 0, width, height), outline=0, fill=0)
-			draw.text((0,0),message,font=font,fill = 255)
+			draw.text((0,0),messages[message],font=font,fill = 255)
 			
 			#display image
 			self.disp.image(image)

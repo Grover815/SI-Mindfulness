@@ -2,13 +2,13 @@
 
 from motor import Stepper
 #from led import Led
-#from display import DisplayGUI
+from display import DisplayGUI
 
 # Circuit Python Implementation for I2C Access
-#import board
-#import busio
+import board
+import busio
 #import adafruit_vl53l0x
-#import adafruit_ssd1306
+import adafruit_ssd1306
 
 from multiprocessing import Process, Pipe 
 #, Event # event use maybe to turn off motors as seen in conditiontest.py
@@ -22,10 +22,10 @@ leds = []
 
 def main():
 	#Initiliaze I2C
-	#i2c = busio.I2C(board.SCL,board.SDA)
+	i2c = busio.I2C(board.SCL,board.SDA)
 
 	# Display object setup
-	#disp = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c)
+	disp = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c,addr=0x3d)
 
 
 	# Data pipes
@@ -41,7 +41,7 @@ def main():
 	#wave = Gesture(xshut,i2c)
 
 	# Pass display object to GUI Wrapper that contains neat functions to output to display
-	#GUI = DisplayGUI(disp)
+	GUI = DisplayGUI(disp)
 
 	#LED
 	#for i in range(0,len(led)):
@@ -52,7 +52,7 @@ def main():
 	p1.start()
 	p2 = Process(target=motor2.run)
 	p2.start()
-
+	GUI.writeMessage("Resistance makes \n success worthwhile.")
 	try:
 		while True:
 			if input("Run? (y/n)") == 'n':
@@ -71,6 +71,7 @@ def main():
 		p1.join()
 		p2.terminate()
 		p2.join()
+		GUI.writeMessage("")
 		print("User terminated.")
 
 

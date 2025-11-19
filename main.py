@@ -52,15 +52,15 @@ def main():
 	p1.start()
 	p2 = Process(target=motor2.run)
 	p2.start()
-	GUI.writeMessage("Resistance makes \n success worthwhile.")
+	#GUI.writeMessage("Resistance makes success worthwhile.")
 	try:
 		while True:
 			if input("Run? (y/n)") == 'n':
 				motor1_parent.send("END")
 				motor2_parent.send("END")
 				break
-			motor1_parent.send(int(input("Motor 1 Speed? "))) # speeds between 1 and 4, if 0 motor is stopped but process is still active, negative numbers rotate counter clockwise
-			motor2_parent.send(int(input("Motor 2 Speed? ")))	
+			motor1_parent.send(float(input("Motor 1 Speed? "))) # speeds between 1 and 4, if 0 motor is stopped but process is still active, negative numbers rotate counter clockwise
+			motor2_parent.send(float(input("Motor 2 Speed? ")))	
 		p1.terminate()
 		p1.join()
 		p2.terminate()

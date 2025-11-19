@@ -66,16 +66,16 @@ class Stepper:
 	# Multiprocessing implementation of start()
 	def run(self):
 		while True:
+			if self.speed> 0:
+				self.move()
 			if self.conn.poll():
 				msg = self.conn.recv()
 				if msg == "END":
 				    break
-				if type(msg) == int: # More validation on speed input? In main logic perhaps
+				if type(msg) == float: # More validation on speed input? In main logic perhaps
 					#print(msg)
 					self.speed = abs(msg)
 					self.clockwise = True if msg > 0 else False
-			if self.speed>= 0.5:
-				self.move()
 		self.conn.close()
 
 

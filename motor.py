@@ -29,7 +29,7 @@ class Stepper:
 			GPIO.setup(pin,GPIO.OUT)
 
 
-	# determines sleep time (s) based on the speed of the motor in rpm
+	# determines sleep time (s) based on the speed of the motor in rps
 	def slp(self):
 		return 1/(200*self.speed)
 
@@ -40,7 +40,7 @@ class Stepper:
 	# Move function moves the motor one step
 	def move(self):
 		GPIO.output(self.pins,self.FSL[self.direction()*(self.step%len(self.FSL))]) # outputs to each motor pin the logic table entry based on the mod (%) of the total self.step
-		print(self.FSL[self.direction()*(self.step%len(self.FSL))])
+		#print(self.FSL[self.direction()*(self.step%len(self.FSL))])
 		self.step+=1
 		sleep(self.slp())
 
@@ -66,22 +66,25 @@ class Stepper:
 	# Multiprocessing implementation of start()
 	def run(self):
 		while True:
-			if self.speed>= 0.5:
-				self.move()
 			if self.conn.poll():
 				msg = self.conn.recv()
 				if msg == "END":
 				    break
 				if type(msg) == int: # More validation on speed input? In main logic perhaps
-					self.speed = msg
+					#print(msg)
+					self.speed = abs(msg)
+					self.clockwise = True if msg > 0 else False
+			if self.speed>= 0.5:
+				self.move()
 		self.conn.close()
 
 
 # this if statement is only run if the python file is run directly from terminal using python motor.py
 # this will not trigger when imported into another file
 # this isolation provides a good way to test the motor
+"""
 if __name__ == '__main__':
-	from multiprocessing import
+	#from multiprocessing import
 	print("~Motor Test~")
 	pins = (12,16,21,20)
 	#pins = ["A1","A2",'B1',"B2"]
@@ -97,3 +100,4 @@ if __name__ == '__main__':
 		print("Motor Test Terminated by User.")
 		motor.stop()
 		GPIO.cleanup()
+"""

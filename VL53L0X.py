@@ -2,19 +2,19 @@
 
 import board
 import busio
+
 import adafruit_vl53l0x
 from time import sleep
 import math
 
 
-#Initiliaze I2C
-i2c = busio.I2C(board.SCL,board.SDA)
-
 
 class Gesture():
 
-	max_distance = 200
-	min_distance = 0
+	max_distance = 200 # Maximum distance to detect object
+	min_distance = 0 # Minimum distance to detect object
+
+	sensor_distance = 20 # distance between first and last sensor
 
 	def __init__(self,xshut,i2c):
 		self.vl53 = []
@@ -22,18 +22,19 @@ class Gesture():
 		self.time = [0 for i in range(0,len(xshut))]
 		self.speed = 0
 		self.direction = 0 # 0 for left, 1 for right
+		
 		GPIO.setmode(GPIO.BCM)
 		for i in range(0,len(xShut)):
 			GPIO.setup(xShut[i], GPIO.OUT, initial=GPIO.LOW)
 		for i in range(len(xShut)):
-			vl53.append(adafruit_vl53l0x.VL53L0X(i2c))
-			vl53[i].start_continuous()       # Hardware/power limitations of using continuous mode?
-			vl53[i].set_address(i + 0x30)
+			self.vl53.append(adafruit_vl53l0x.VL53L0X(i2c))
+			self.vl53[i].start_continuous()       # Hardware/power limitations of using continuous mode?
+			self.vl53[i].set_address(i + 0x30)
 
 	def distance(self):
-		distances = [0 for i in range(0,len(vl53))]
+		distances = [0 for i in range(0,len(self.vl53))]
 		for i, sensor in enumerate(self.vl53):
-			distances[i] = (sensor.range)
+			distances[i] = sensor.range
 		return distances
 
 	def is_valid(self,distance):
@@ -45,20 +46,21 @@ class Gesture():
 			if is_valid(distance):
 				self.position[i] = 1
 				self.time = time.time()
+			else:
+				self.position[i] = 0
 
 	def direction(self):
-		self.direction = 1 if (self.position[0]-self.position[-1] < 0) else 0
+		self.direction = 1 if (self.time[0]-self.time[-1] < 0) else 0 
 
 	def speed(self):
 		self.direction()
-		self.speed = math.abs(self.position[0]-self.position[-1])
+		self.speed = sensor_distance/math.abs(self.time[0]-self.time[-1]) 
 
 
 	def update(self):
 		ret = True
 		try:
 			self.position()
-			self.direction()
 			self.speed()
 		except:
 			ret = False
@@ -71,12 +73,15 @@ class Gesture():
 
 
 if __name__ == 'main':
+	#Initiliaze I2C
+	i2c = busio.I2C(board.SCL,board.SDA)
 	pins = [] # Pins for Shutoff pins
 	wave = Gesture(pins,i2c)
 	try:
-		while True:
-			wave.update()
-			print(wave.position)
+		update = True
+		while update:
+			update = wave.update()
+			print(wave.distance()) # wave.position
 	except KeyboardInterrupt:
 		wave.stop()
 		GPIO.cleanup()

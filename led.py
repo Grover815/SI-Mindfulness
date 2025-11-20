@@ -10,11 +10,12 @@ class Led:
 	def __init__(self,pin):
 		self.pin = pin
 		self.brightness = 100 # 0-100 exclusive mapped to duty cycle
-		self.red_pin = 2
-		self.green_pin = 3
-		self.blue_pin = 4
+		self.red_pin = 26
+		self.green_pin = 19
+		self.blue_pin = 13
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setup(pin, GPIO.OUT) # LED PIN number
+		self.pwm = GPIO.PWM(self.pin,1000)
 		GPIO.setup(self.red_pin, GPIO.OUT) #R
 		GPIO.setup(self.green_pin, GPIO.OUT) #G
 		GPIO.setup(self.blue_pin, GPIO.OUT) #B
@@ -40,7 +41,6 @@ class Led:
 			self.blue()
 		if color == 'R':
 			self.red()
-		self.pwm = GPIO.PWM(self.pin,1000)
 		self.pwm.start(DC)
 
 	def off(self):
@@ -99,37 +99,36 @@ class ColorGroup:
 			return hold
 		else:
 			hold = True
-			if color == 'G':
-				color = self.green()
-			if color == 'B':
-				color = self.blue()
-			if color == 'R':
-				color = self.red()
-			for i in range(len(self.leds())):
-				if i % 2 != 0:
-					if position[(i+1)/2]:
+			for i in range(len(self.leds)):
+				DC = 0
+				if i % 2 == 0:
+					if position[i//2]:
 						DC = 100
 					else:
-						DC = 70
+						DC = 0
 				else:
-					DC = 85
+					if position[(i-1)//2] or position[(i+1)//2]:
+						DC = 7
+					else:
+						DC = 0
 				self.leds[i].on(color, DC)
-			sleep(0.5)
-			self.coloroff()
+			sleep(2)
+			for i in self.leds:
+				i.off()
 			return hold
 		
 	def holdpattern(self, start):
 		if time.time() - start >= 5:
 			for i in range(0,10):
-				for i in self.leds():
+				for i in self.leds:
 					self.leds[i].on(R, 100)
 				sleep(0.5)
 				self.coloroff()
-				for i in self.leds():
+				for i in self.leds:
 					self.leds[i].on(G, 100)
 				sleep(0.5)
 				self.coloroff()
-				for i in self.leds()
+				for i in self.leds:
 					self.leds[i].on(B, 100)
 				sleep(0.5)
 				self.coloroff()
@@ -137,35 +136,50 @@ class ColorGroup:
 			return
 
 
-pins = [] # Pins for Shutoff pins
-ledpins = [] # LED power pins for sensor LEDS
-LED_instance = []
-colors = ['R', 'G', 'B']
+##pins = [] # Pins for Shutoff pins
+##ledpins = [] # LED power pins for sensor LEDS
+##LED_instance = []
+##colors = ['R', 'G', 'B']
+##
+##wave = Gesture(pins,i2c)
+##for i in ledpins:
+##	LED_instance.append(Led(i))
+##
+##SensorLeds = ColorGroup(LED_instance)
+##
+##try:
+##	t = time.time()
+##	while True:
+##		randcolor = random.choice(colors)
+##		wave.update()
+##		pos = wave.position()
+##		hold = SensorLeds.pattern(randcolor, pos)
+##		if hold:
+##			SensorLeds.holdpattern(hold, t)
+##		else:
+##			t = time.time()
+##	except KeyboardInterrupt:
+##		wave.stop()
+##		GPIO.cleanup()
+##		print("Program Terminated by User.")
 
-wave = Gesture(pins,i2c)
-for i in ledpins:
-	LED_instance.append(Led(i))
+GPIO.cleanup()
+led_pins = [14, 15, 18, 23, 24]
+LEDS = []
+for i in led_pins:
+        LEDS.append(Led(i))
 
-SensorLeds = ColorGroup(LED_instance)
+sensor_LEDS = ColorGroup(LEDS)
+pos = [1,0,0]
+sensor_LEDS.pattern('R', pos)
 
-try:
-	t = time.time()
-	while True:
-		randcolor = random.choice(colors)
-		wave.update()
-		pos = wave.position()
-		hold = SensorLeds.pattern(randcolor, pos)
-		if hold:
-			SensorLeds.holdpattern(hold, t)
-		else:
-			t = time.time()
-	except KeyboardInterrupt:
-		wave.stop()
-		GPIO.cleanup()
-		print("Program Terminated by User.")
-
-
-
+##for j in LEDS:
+##        j.on("R", 100)
+##        sleep(1)
+##for j in LEDS:
+##        j.off()
+        
+print("All done.")
 
 
 		

@@ -17,9 +17,9 @@ class DisplayGUI():
 	# Function to write message
 	def writeMessage(self,message):
 		'''Takes in one of our mindfullness messages and displays it indefinately'''
-		messages = ["Resistance makes\nsuccess worthwhile.","I am capablre of succedding.","This too shall pass.","Everything is as it is.",
-		"Quite the mind and the soul will speak."
-		"My grades do not define me."]
+		messages = ["Resistance makes\nsuccess worthwhile.","I am capablre of\nsuccedding.","This too shall pass.","Everything is as it\nis.",
+		"Quiet the mind and\nthe soul will speak.",
+		"My grades do not\ndefine me."]
 		# Clear display.
 		self.disp.fill(0)
 		self.disp.show()
@@ -37,15 +37,14 @@ class DisplayGUI():
 		#define starting position
 
 
-		while True:
-			# Draw a black filled box to clear the image.
-			draw.rectangle((0, 0, width, height), outline=0, fill=0)
-			draw.text((0,0),messages[message],font=font,fill = 255)
-			
-			#display image
-			self.disp.image(image)
-			self.disp.show()
-			time.sleep(0.1)
+		# Draw a black filled box to clear the image.
+		draw.rectangle((0, 0, width, height), outline=0, fill=0)
+		draw.text((0,0),messages[message],font=font,fill = 255)
+		
+		#display image
+		self.disp.image(image)
+		self.disp.show()
+                time.sleep(0.1)
 
 		
 
@@ -70,18 +69,17 @@ class DisplayGUI():
 		font = ImageFont.load_default()
 		#define height
 		height = 32*self.height//len(stats)
+                draw.rectangle((0, 0, width, height), outline=0, fill=0)
 
-
-		while True:
-			for i in range(len(stats)):
-				# Draw a black filled box to clear the image.
-				draw.rectangle((0, 0, width, height), outline=0, fill=0)
-				draw.text((0,i*height),stats[i],font=font,fill = 255)
-				
-				#display image
-			self.disp.image(image)
-			self.disp.show()
-			time.sleep(0.1)
+		for i in range(len(stats)):
+			# Draw a black filled box to clear the image.
+			
+			draw.text((0,i*height),stats[i],font=font,fill = 255)
+			
+		#display image
+		self.disp.image(image)
+		self.disp.show()
+		time.sleep(0.1)
 if __name__ == 'main':
 	i2c = busio.I2C(board.SCL,board.SDA)
 	disp = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)

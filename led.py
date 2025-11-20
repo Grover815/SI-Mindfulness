@@ -2,6 +2,8 @@
 
 import RPi.GPIO as GPIO
 from time import sleep
+from VL53L0X import Gesture
+import random
 
 class Led:
 
@@ -26,23 +28,24 @@ class Led:
 	def green(self):
 		GPIO.output(self.green_pin, GPIO.HIGH)
 	
-	def coloroff():
-		GPIO.output(green_pin, GPIO.LOW)
-		GPIO.output(blue_pin, GPIO.LOW)
-		GPIO.output(red_pin, GPIO.LOW)
+	def coloroff(self):
+		GPIO.output(self.green_pin, GPIO.LOW)
+		GPIO.output(self.blue_pin, GPIO.LOW)
+		GPIO.output(self.red_pin, GPIO.LOW)
 
-	def on(self, color, secs):
+	def on(self, color, DC):
 		if color == 'G':
 			self.green()
 		if color == 'B':
 			self.blue()
 		if color == 'R':
 			self.red()
-		pwm = GPIO.PWM(self.pin,1000)
-		pwm.start(self.brightness)
-		sleep(secs)
-		pwm.stop()
+		self.pwm = GPIO.PWM(self.pin,1000)
+		self.pwm.start(DC)
+
+	def off(self):
 		self.coloroff()
+		self.pwm.stop()
 
 	def breath(self, color):
 		if color == 'G':
@@ -64,16 +67,110 @@ class Led:
 		pwm.stop()
 		self.coloroff()
 
+class ColorGroup:
+# DO I NEED TO DO BCM MODE SETUP
+	def __init__(self, leds): # Takes list of LED instances
+		self.leds = leds
+		self.red_pin = 2
+		self.green_pin = 3
+		self.blue_pin = 4
+		GPIO.setup(self.red_pin, GPIO.OUT) #R
+		GPIO.setup(self.green_pin, GPIO.OUT) #G
+		GPIO.setup(self.blue_pin, GPIO.OUT) #B
+	
+	def red(self):
+		GPIO.output(self.red_pin, GPIO.HIGH)
 
-if __name__ == '__main__':
-	print("~LED Test~")
-	n = input("How many LED's are you testing?: ")
-	leds = []
-	for i in range(0,len(pins)):
-		pin = input(f"Pin {i+1}?: ")
-		leds.append(Led(pin))
-	for led in leds:
-		led.on(50)
-		sleep(1)
+	def blue(self):
+		GPIO.output(self.blue_pin, GPIO.HIGH)
+
+	def green(self):
+		GPIO.output(self.green_pin, GPIO.HIGH)
+
+	def coloroff(self):
+		GPIO.output(green_pin, GPIO.LOW)
+		GPIO.output(blue_pin, GPIO.LOW)
+		GPIO.output(red_pin, GPIO.LOW)
+	
+	def pattern(self, color, position):
+		color = color 
+		if all(x == 0 for x in position):
+			hold = False
+			return hold
+		else:
+			hold = True
+			if color == 'G':
+				color = self.green()
+			if color == 'B':
+				color = self.blue()
+			if color == 'R':
+				color = self.red()
+			for i in range(len(self.leds())):
+				if i % 2 != 0:
+					if position[(i+1)/2]:
+						DC = 100
+					else:
+						DC = 70
+				else:
+					DC = 85
+				self.leds[i].on(color, DC)
+			sleep(0.5)
+			self.coloroff()
+			return hold
+		
+	def holdpattern(self, start):
+		if time.time() - start >= 5:
+			for i in range(0,10):
+				for i in self.leds():
+					self.leds[i].on(R, 100)
+				sleep(0.5)
+				self.coloroff()
+				for i in self.leds():
+					self.leds[i].on(G, 100)
+				sleep(0.5)
+				self.coloroff()
+				for i in self.leds()
+					self.leds[i].on(B, 100)
+				sleep(0.5)
+				self.coloroff()
+		else:
+			return
+
+
+pins = [] # Pins for Shutoff pins
+ledpins = [] # LED power pins for sensor LEDS
+LED_instance = []
+colors = ['R', 'G', 'B']
+
+wave = Gesture(pins,i2c)
+for i in ledpins:
+	LED_instance.append(Led(i))
+
+SensorLeds = ColorGroup(LED_instance)
+
+try:
+	t = time.time()
+	while True:
+		randcolor = random.choice(colors)
+		wave.update()
+		pos = wave.position()
+		hold = SensorLeds.pattern(randcolor, pos)
+		if hold:
+			SensorLeds.holdpattern(hold, t)
+		else:
+			t = time.time()
+	except KeyboardInterrupt:
+		wave.stop()
+		GPIO.cleanup()
+		print("Program Terminated by User.")
+
+
+
+
+
+		
+
+
+
 
 

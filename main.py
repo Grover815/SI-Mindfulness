@@ -1,28 +1,35 @@
 # main.py
 
 from motor import Stepper
-#from led import Led
+from led import Led, ColorGroup
 from display import DisplayGUI
+from VL53L0X import Gesture
 
 # Circuit Python Implementation for I2C Access
 import board
 import busio
-#import adafruit_vl53l0x
+import adafruit_vl53l0x
 import adafruit_ssd1306
+
+from time import sleep
+import RPi.GPIO as GPIO
 
 from multiprocessing import Process, Pipe 
 #, Event # event use maybe to turn off motors as seen in conditiontest.py
 
 # Distance sensors
-xshut = []
+xshut = [4,11,25]
 
 # LED's
-leds = []
+led_pins = [14, 15, 18, 23, 24]
 
 
 def main():
 	#Initiliaze I2C
-	i2c = busio.I2C(board.SCL,board.SDA)
+	i2c = board.I2C()
+	i2c.unlock()
+
+	wave = Gesture(xshut,i2c)
 
 	# Display object setup
 	disp = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c,addr=0x3d)
@@ -34,27 +41,34 @@ def main():
 
 
 	# Motors
-	motor1 = Stepper([12,16,21,20],motor1_child)
-	motor2 = Stepper([10,22,17,27],motor2_child)
+	#motor1 = Stepper([12,16,21,20],motor1_child)
+	#motor2 = Stepper([10,22,17,27],motor2_child)
 
 
-	#wave = Gesture(xshut,i2c)
+	
 
 	# Pass display object to GUI Wrapper that contains neat functions to output to display
 	GUI = DisplayGUI(disp)
 
 	#LED
-	#for i in range(0,len(led)):
-	#	leds[i] = Led(led)
+	LEDS = []
+	for i in led_pins:
+		print(i)
+		LEDS.append(Led(i))
+	print(LEDS)
+	sensor_LEDS = ColorGroup(LEDS)
 
 
-	p1 = Process(target=motor1.run)
-	p1.start()
-	p2 = Process(target=motor2.run)
-	p2.start()
-	GUI.writeMessage(0)
+	#p1 = Process(target=motor1.run)
+	#p1.start()
+	#p2 = Process(target=motor2.run)
+	#p2.start()
+	#GUI.writeMessage(0)
 	try:
-		while True:
+		for i in range(0,10):
+			wave.update()
+			sensor_LEDS.pattern('R', wave.pos)
+		"""while True:
 			if input("Run? (y/n)") == 'n':
 				motor1_parent.send("END")
 				motor2_parent.send("END")
@@ -65,13 +79,13 @@ def main():
 		p1.join()
 		p2.terminate()
 		p2.join()
-		print("End Message Received.")			
+		print("End Message Received.")"""			
 	except KeyboardInterrupt:
 		p1.terminate()
 		p1.join()
 		p2.terminate()
 		p2.join()
-		GUI.writeMessage("")
+		i2c.unlock()
 		print("User terminated.")
 
 

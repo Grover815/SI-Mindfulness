@@ -109,8 +109,8 @@ class DisplayGUI():
 		self.disp.image(image)
 		self.disp.show()
 
-if __name__ == 'main':
+if __name__ == '__main__':
 	i2c = busio.I2C(board.SCL,board.SDA)
-	disp = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)
+	disp = adafruit_ssd1306.SSD1306_I2C(128, 63, i2c,addr=0x3d)
 	GUI = DisplayGUI(disp)
-	GUI.writeMessage('Hello World!')
+	GUI.writeMessage(0)

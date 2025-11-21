@@ -15,7 +15,7 @@ class Led:
 		self.blue_pin = 13
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setup(pin, GPIO.OUT) # LED PIN number
-		self.pwm = GPIO.PWM(self.pin,1000)
+		self.pwm = GPIO.PWM(pin,1000)
 		GPIO.setup(self.red_pin, GPIO.OUT) #R
 		GPIO.setup(self.green_pin, GPIO.OUT) #G
 		GPIO.setup(self.blue_pin, GPIO.OUT) #B
@@ -162,24 +162,24 @@ class ColorGroup:
 ##		wave.stop()
 ##		GPIO.cleanup()
 ##		print("Program Terminated by User.")
+if __name__ == "__main__":
+	GPIO.cleanup()
+	led_pins = [14, 15, 18, 23, 24]
+	LEDS = []
+	for i in led_pins:
+	        LEDS.append(Led(i))
 
-GPIO.cleanup()
-led_pins = [14, 15, 18, 23, 24]
-LEDS = []
-for i in led_pins:
-        LEDS.append(Led(i))
+	sensor_LEDS = ColorGroup(LEDS)
+	pos = [1,0,0]
+	sensor_LEDS.pattern('R', pos)
 
-sensor_LEDS = ColorGroup(LEDS)
-pos = [1,0,0]
-sensor_LEDS.pattern('R', pos)
-
-##for j in LEDS:
-##        j.on("R", 100)
-##        sleep(1)
-##for j in LEDS:
-##        j.off()
-        
-print("All done.")
+	##for j in LEDS:
+	##        j.on("R", 100)
+	##        sleep(1)
+	##for j in LEDS:
+	##        j.off()
+	        
+	print("All done.")
 
 
 		

@@ -15,17 +15,24 @@ import time
 class Gesture():
 
 	
-	
+	max_distance = 100 # Maximum distance to detect object
+	min_distance = 0 # Minimum distance to detect object
+	sensor_distance = 20 # distance between first and last sensor
+	max_speed = 10 # units? do testing for maximum hand wave speed
+	min_speed = 0
+
 
 	def __init__(self,xshut,i2c):
 		self.vl53 = []
 		self.pos = [0 for i in range(0,len(xshut))]
+		self.history = [[0 for i in range(0,len(xshut))] for i in range(0,10)] # keep the last 10 cycles of data
 		self.time = [0 for i in range(0,len(xshut))]
+		self.triggered = [False for i in range(0,len(xshut))]
 		self.spd = 0
-		self.dir = 0 # 0 for left, 1 for right
-		self.max_distance = 100 # Maximum distance to detect object
-		self.min_distance = 0 # Minimum distance to detect object
-		self.sensor_distance = 20 # distance between first and last sensor
+		self.dir = 0 # -1 for left, 1 for right
+		self.waves = 0
+
+
 		
 		GPIO.setmode(GPIO.BCM)
 		addrs = [hex(addr) for addr in i2c.scan()]
@@ -66,20 +73,34 @@ class Gesture():
 				self.pos[i] = 0
 
 	def direction(self):
-		self.dir = 1 if (self.time[0]-self.time[-1] < 0) else 0 
+		self.dir = 1 if (self.time[0]-self.time[-1] < 0) else -1
 
 	def speed(self):
 		try:
 			self.spd = self.sensor_distance/abs(self.time[0]-self.time[-1]) 
+			# if speed detected greater than maximum speed, set to maximum speed, this will let the motor speed be properly bounded as well
+			if self.spd > self.max_speed: 
+				self.spd = self.max_speed
 		except ZeroDivisionError:
 			self.spd = 0
 
 
 	def update(self):
-		ret = True
-		self.position()
-		self.direction()
-		self.speed()
+		if 0 not in self.time:
+			self.position()
+			self.history.pop(0)
+			self.history.append(self.pos)
+		
+		for i,ele in enumerate(self.pos): 
+			if ele == 1:
+				self.triggered[i] = True
+			
+		if False not in self.triggered: # only update speed and direction if all three sensors have been triggered and in a "wave" motion by comparing times
+			if (self.time[0] <= self.time[1] <= self.time[2]) or (self.time[0] >= self.time[1] >= self.time[2]): # Interval comparison
+				self.waves+=1
+				self.direction()
+				self.speed()
+				self.triggered = [False for i in range(0,len(self.triggered))]
 
 
 	def stop(self):

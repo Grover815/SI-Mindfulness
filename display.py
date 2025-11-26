@@ -4,6 +4,7 @@ import time
 import board
 import busio
 import adafruit_ssd1306
+from logs import setup_logger
 
 class DisplayGUI():
 
@@ -76,7 +77,34 @@ class DisplayGUI():
 			self.disp.show()
 
 		
+	def write(self,message):
+		logger = setup_logger()
+		logger.info(f"Write message: {message}")
+		
+		# Clear display.
+		self.disp.fill(0)
+		self.disp.show()
 
+		# Create blank image for drawing.
+		# Make sure to create image with mode '1' for 1-bit color.
+		width = self.disp.width
+		height = self.disp.height
+		image = Image.new("1", (width, height))
+
+		# Get drawing object to draw on image.
+		draw = ImageDraw.Draw(image)
+		#import font
+		font = ImageFont.load_default()
+		#define starting position
+
+
+		# Draw a black filled box to clear the image.
+		draw.rectangle((0, 0, width, height), outline=0, fill=0)
+		draw.text((0,0),message,font=font,fill = 255)
+		
+		#display image
+		self.disp.image(image)
+		self.disp.show()
 	
 
 	def showStats(self,stats):

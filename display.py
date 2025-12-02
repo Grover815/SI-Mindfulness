@@ -12,65 +12,35 @@ class DisplayGUI():
 
 
 	# Function to write message
-	def writeMessage(self,message,mode = 1,stats = None):
-		if mode == 1:
-			'''Takes in one of our mindfullness messages and displays it indefinately'''
-			messages = ["Resistance makes\nsuccess worthwhile.","I am capablre of\nsuccedding.","This too shall pass.","Everything is as it\nis.",
-			"Quiet the mind and\nthe soul will speak.",
-			"My grades do not\ndefine me."]
-			# Clear display.
-			self.disp.fill(0)
-			self.disp.show()
+	def writeMessage(self,message):
+		'''Takes in one of our mindfullness messages and displays it indefinately'''
+		messages = ["Resistance makes\nsuccess worthwhile.","I am capablre of\nsuccedding.","This too shall pass.","Everything is as it\nis.",
+		"Quiet the mind and\nthe soul will speak.",
+		"My grades do not\ndefine me."]
+		# Clear display.
+		self.disp.fill(0)
+		self.disp.show()
 
-			# Create blank image for drawing.
-			# Make sure to create image with mode '1' for 1-bit color.
-			width = self.disp.width
-			height = self.disp.height
-			image = Image.new("1", (width, height))
+		# Create blank image for drawing.
+		# Make sure to create image with mode '1' for 1-bit color.
+		width = self.disp.width
+		height = self.disp.height
+		image = Image.new("1", (width, height))
 
-			# Get drawing object to draw on image.
-			draw = ImageDraw.Draw(image)
-			#import font
-			font = ImageFont.load_default()
-			#define starting position
+		# Get drawing object to draw on image.
+		draw = ImageDraw.Draw(image)
+		#import font
+		font = ImageFont.load_default(size = 8)
+		#define starting position
 
 
-			# Draw a black filled box to clear the image.
-			draw.rectangle((0, 0, width, height), outline=0, fill=0)
-			draw.text((0,0),messages[message],font=font,fill = 255)
-			
-			#display image
-			self.disp.image(image)
-			self.disp.show()
-		elif mode == 0:
-			'''Takes in a list of stats such as total RPM's, cycle time, max speed, etc 
-			and displays the stats at the end of each useage'''
-			# Clear display.
-			self.disp.fill(0)
-			self.disp.show()
-
-			# Create blank image for drawing.
-			# Make sure to create image with mode '1' for 1-bit color.
-			width = self.disp.width
-			height = self.disp.height
-			image = Image.new("1", (width, height))
-
-			# Get drawing object to draw on image.
-			draw = ImageDraw.Draw(image)
-			#import font
-			font = ImageFont.load_default()
-			#define height
-			height = 32*self.height//len(stats)
-			draw.rectangle((0, 0, width, height), outline=0, fill=0)
-
-			for i in range(len(stats)):
-				# Draw a black filled box to clear the image.
-				
-				draw.text((0,i*height),stats[i],font=font,fill = 255)
-				
-			#display image
-			self.disp.image(image)
-			self.disp.show()
+		# Draw a black filled box to clear the image.
+		draw.rectangle((0, 0, width, height), outline=0, fill=0)
+		draw.text((0,0),messages[message],font=font,fill = 255)
+		
+		#display image
+		self.disp.image(image)
+		self.disp.show()
 
 		
 	def write(self,message):

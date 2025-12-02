@@ -3,6 +3,9 @@
 import RPi.GPIO as GPIO
 from time import sleep
 from logs import setup_logger
+from multiprocessing import current_process
+import time
+
 
 class Stepper:
 	
@@ -13,10 +16,12 @@ class Stepper:
 
 	# Tested range
 	max_speed = 3 # rps
-	min_speed = 0.1 # rps
+	min_speed = 0.2 # rps
 
 	deceleration = 0.1 # how many rps to decrease each step
 	acceleration = 0.1 # how many rps to increase each step
+
+	friction = 0.1
 
 
 
@@ -67,16 +72,22 @@ class Stepper:
 	def run(self):
 		logger = setup_logger()
 		logger.info(f"{current_process().name} running...")
-		targetSpeed = None
+		targetSpeed = 0
+		targetSpeed_time = time.time()
 		while True:
-			
 			if self.spd > targetSpeed:
 				self.spd -= self.deceleration
 			elif self.spd < targetSpeed:
 				self.spd += self.acceleration
 
-			if abs(self.spd) >= min_speed: # if it is set below min speed the motor will stop i.e. to 0
+			if self.spd == targetSpeed:
+				targetSpeed_time = time.time()
+				if time.time() - targetSpeed >= 5:
+					targetSpeed = 0
+
+			if abs(self.spd) >= self.min_speed: # if it is set below min speed the motor will stop i.e. to 0
 				self.move()
+				self.spd = round(self.spd,1)
 
 			if self.conn.poll():
 				msg = self.conn.recv()
@@ -86,12 +97,13 @@ class Stepper:
 				if msg == "GET":
 					self.conn.send([self.step,self.speed_max])
 				if type(msg) == float: # More validation on speed input? In main logic perhaps
-					if abs(msg) > self.speed_max:
-						self.speed_max = abs(msg)
-					targetSpeed = msg
-					logger.info(f"Current Speed: {self.spd}, Target Speed: {targetSpeed}, Clockwise: {self.clockwise}")
-					if self.spd == 0: # if a target speed is received when motor is stopped (self.spd = 0), give it a little speed to start the move() conditional
-						self.spd = self.sign(msg)*self.min_speed
+					if abs(msg) != targetSpeed:  # if a new target speed has been sent
+						if abs(msg) > self.speed_max:
+							self.speed_max = abs(msg)
+						targetSpeed = msg
+						logger.info(f"Current Speed: {self.spd}, Target Speed: {targetSpeed}")
+						if self.spd == 0: # if a target speed is received when motor is stopped (self.spd = 0), give it a little speed to start the move() conditional
+							self.spd = self.sign(msg)*self.min_speed
 
 		logger.debug(f"{current_process().name} connection closed")
 		self.conn.close()

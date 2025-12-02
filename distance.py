@@ -11,10 +11,10 @@ import time
 class Gesture():
 
 	
-	max_distance = 100 # Maximum distance to detect object
+	max_distance = 300 # Maximum distance to detect object
 	min_distance = 0 # Minimum distance to detect object
 	sensor_distance = 1 # distance between first and last sensor
-	max_speed = 11 # units? do testing for maximum hand wave speed
+	max_speed = 350 #11 # units? do testing for maximum hand wave speed
 	min_speed = 0
 
 
@@ -22,7 +22,7 @@ class Gesture():
 		self.i2c = i2c
 		self.vl53 = []
 		self.pos = [0 for i in range(0,len(xshut))]
-		self.history = [[0 for i in range(0,len(xshut))] for i in range(0,50)] # keep the last 10 cycles of data
+		self.history = [[0 for i in range(0,len(xshut))] for i in range(0,300)] # keep the last 10 cycles of data
 		self.time = [0 for i in range(0,len(xshut))]
 		self.triggered = [False for i in range(0,len(xshut))]
 		self.spd = 0
@@ -97,19 +97,19 @@ class Gesture():
 		if False not in self.triggered: # only update speed and direction if all three sensors have been triggered and in a "wave" motion by comparing times
 			if (self.time[0] <= self.time[1] <= self.time[2]): # Interval comparison
 				self.waves += 1
-				print(f"New Wave: {self.waves}")
-				print("Direction: Positive")
+				#print(f"New Wave: {self.waves}")
+				#print("Direction: Positive")
 				self.direction()
 				self.speed()
-				print(f"Speed: {self.dir*self.spd}")
+				#print(f"Speed: {self.dir*self.spd}")
 				self.triggered = [False for i in range(0,len(self.triggered))]
 			if (self.time[0] >= self.time[1] >= self.time[2]):
 				self.waves += 1
-				print(f"New Wave: {self.waves}")
-				print("Direction: Negative")
+				#print(f"New Wave: {self.waves}")
+				#print("Direction: Negative")
 				self.direction()
 				self.speed()
-				print(f"Speed: {self.dir*self.spd}")
+				#print(f"Speed: {self.dir*self.spd}")
 				self.triggered = [False for i in range(0,len(self.triggered))]
 
 
@@ -146,3 +146,4 @@ if __name__ == '__main__':
 		GPIO.cleanup()
 		i2c.unlock()
 		print("Program Terminated by User.")
+		

@@ -12,8 +12,7 @@ class Led:
 		self.red_pin = 26
 		self.green_pin = 19
 		self.blue_pin = 13
-		GPIO.setmode(GPIO.BCM)
-		GPIO.setup(pin, GPIO.OUT) # LED PIN number
+		#GPIO.setup(pin, GPIO.OUT) # LED PIN number
 		self.pwm = GPIO.PWM(pin,1000)
 		GPIO.setup(self.red_pin, GPIO.OUT) #R
 		GPIO.setup(self.green_pin, GPIO.OUT) #G
@@ -53,23 +52,23 @@ class Led:
 			self.blue()
 		if color == 'R':
 			self.red()
-		pwm = GPIO.PWM(self.pin,1000)
-		pwm.start(0)
+		self.pwm.start(0)
 		for i in range(0,1000):
 			DC = i/10
-			pwm.ChangeDutyCycle(DC)
+			self.pwm.ChangeDutyCycle(DC)
 			sleep(0.001)
 		for i in range(0,1000):
 			DC = 100 - (i/10)
-			pwm.ChangeDutyCycle(DC)
+			self.pwm.ChangeDutyCycle(DC)
 			sleep(0.001)
-		pwm.stop()
+		self.pwm.stop()
 		self.coloroff()
 
 class ColorGroup:
 # DO I NEED TO DO BCM MODE SETUP
 	def __init__(self, leds): # Takes list of LED instances
 		self.leds = leds
+	'''
 		self.red_pin = 2
 		self.green_pin = 3
 		self.blue_pin = 4
@@ -90,7 +89,7 @@ class ColorGroup:
 		GPIO.output(green_pin, GPIO.LOW)
 		GPIO.output(blue_pin, GPIO.LOW)
 		GPIO.output(red_pin, GPIO.LOW)
-	
+	'''
 	def pattern(self, color, position):
 		color = color 
 		if all(x == 0 for x in position):
@@ -111,11 +110,11 @@ class ColorGroup:
 					else:
 						DC = 0
 				self.leds[i].on(color, DC)
-			sleep(2)
+			sleep(0.1)
 			for i in self.leds:
 				i.off()
 			return hold
-		
+'''	
 	def holdpattern(self, start):
 		if time.time() - start >= 5:
 			for i in range(0,10):
@@ -133,7 +132,7 @@ class ColorGroup:
 				self.coloroff()
 		else:
 			return
-
+'''
 
 ##pins = [] # Pins for Shutoff pins
 ##ledpins = [] # LED power pins for sensor LEDS
@@ -162,7 +161,7 @@ class ColorGroup:
 ##		GPIO.cleanup()
 ##		print("Program Terminated by User.")
 if __name__ == "__main__":
-	from VL53L0X import Gesture
+	from distance import Gesture
 	GPIO.cleanup()
 	led_pins = [14, 15, 18, 23, 24]
 	LEDS = []
@@ -170,8 +169,8 @@ if __name__ == "__main__":
 	        LEDS.append(Led(i))
 
 	sensor_LEDS = ColorGroup(LEDS)
-	pos = [1,0,0]
-	sensor_LEDS.pattern('R', pos)
+	pos = [0,0,1]
+	sensor_LEDS.pattern('B', pos)
 
 	##for j in LEDS:
 	##        j.on("R", 100)

@@ -2,8 +2,7 @@
 
 import RPi.GPIO as GPIO
 from time import sleep
-from VL53L0X import Gesture
-import random
+#import random
 
 class Led:
 
@@ -163,6 +162,7 @@ class ColorGroup:
 ##		GPIO.cleanup()
 ##		print("Program Terminated by User.")
 if __name__ == "__main__":
+	from VL53L0X import Gesture
 	GPIO.cleanup()
 	led_pins = [14, 15, 18, 23, 24]
 	LEDS = []

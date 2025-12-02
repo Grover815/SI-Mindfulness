@@ -1,11 +1,7 @@
 # VL53L0X.py
 
-import board
-import busio
-
 import adafruit_vl53l0x
 from time import sleep
-import math
 import RPi.GPIO as GPIO
 import time
 
@@ -17,15 +13,16 @@ class Gesture():
 	
 	max_distance = 100 # Maximum distance to detect object
 	min_distance = 0 # Minimum distance to detect object
-	sensor_distance = 20 # distance between first and last sensor
-	max_speed = 10 # units? do testing for maximum hand wave speed
+	sensor_distance = 1 # distance between first and last sensor
+	max_speed = 11 # units? do testing for maximum hand wave speed
 	min_speed = 0
 
 
 	def __init__(self,xshut,i2c):
+		self.i2c = i2c
 		self.vl53 = []
 		self.pos = [0 for i in range(0,len(xshut))]
-		self.history = [[0 for i in range(0,len(xshut))] for i in range(0,10)] # keep the last 10 cycles of data
+		self.history = [[0 for i in range(0,len(xshut))] for i in range(0,50)] # keep the last 10 cycles of data
 		self.time = [0 for i in range(0,len(xshut))]
 		self.triggered = [False for i in range(0,len(xshut))]
 		self.spd = 0
@@ -34,17 +31,13 @@ class Gesture():
 
 
 		
-		GPIO.setmode(GPIO.BCM)
 		addrs = [hex(addr) for addr in i2c.scan()]
-		for pin in xshut:
-			print(pin, "Setup")
-			GPIO.setup(pin, GPIO.OUT)
-			GPIO.output(pin,GPIO.LOW)
+		
 		for i in range(0,len(xshut)):
 			GPIO.output(xshut[i],GPIO.HIGH)
-			print([hex(addr) for addr in i2c.scan()])
+			print([hex(addr) for addr in self.i2c.scan()])
 			try:
-				self.vl53.append(adafruit_vl53l0x.VL53L0X(i2c,address=0x29))
+				self.vl53.append(adafruit_vl53l0x.VL53L0X(self.i2c,address=0x29))
 			except Exception as e:
 				GPIO.output(xshut,[0]*len(xshut))
 				i2c.unlock()
@@ -64,7 +57,7 @@ class Gesture():
 
 	def position(self):
 		for i, sensor in enumerate(self.vl53):
-			#print(i, sensor)
+			#print("time +", self.time)
 			distance = sensor.range
 			if self.is_valid(distance):
 				self.pos[i] = 1
@@ -77,7 +70,9 @@ class Gesture():
 
 	def speed(self):
 		try:
+
 			self.spd = self.sensor_distance/abs(self.time[0]-self.time[-1]) 
+			#print(self.spd)
 			# if speed detected greater than maximum speed, set to maximum speed, this will let the motor speed be properly bounded as well
 			if self.spd > self.max_speed: 
 				self.spd = self.max_speed
@@ -90,16 +85,31 @@ class Gesture():
 			self.position()
 			self.history.pop(0)
 			self.history.append(self.pos)
+		else:
+			self.time = [1,1,1]
 		
 		for i,ele in enumerate(self.pos): 
 			if ele == 1:
+				#print(i, 'triggered')
 				self.triggered[i] = True
-			
+				#print(self.triggered)
+		
 		if False not in self.triggered: # only update speed and direction if all three sensors have been triggered and in a "wave" motion by comparing times
-			if (self.time[0] <= self.time[1] <= self.time[2]) or (self.time[0] >= self.time[1] >= self.time[2]): # Interval comparison
-				self.waves+=1
+			if (self.time[0] <= self.time[1] <= self.time[2]): # Interval comparison
+				self.waves += 1
+				print(f"New Wave: {self.waves}")
+				print("Direction: Positive")
 				self.direction()
 				self.speed()
+				print(f"Speed: {self.dir*self.spd}")
+				self.triggered = [False for i in range(0,len(self.triggered))]
+			if (self.time[0] >= self.time[1] >= self.time[2]):
+				self.waves += 1
+				print(f"New Wave: {self.waves}")
+				print("Direction: Negative")
+				self.direction()
+				self.speed()
+				print(f"Speed: {self.dir*self.spd}")
 				self.triggered = [False for i in range(0,len(self.triggered))]
 
 
@@ -109,15 +119,27 @@ class Gesture():
 
 
 if __name__ == '__main__':
+	import board
+	import busio
 	print("Initializing")
 	#Initiliaze I2C
 	i2c = board.I2C()
-	pins = [4,11,25] # Pins for Shutoff pins
+	pins = [9,11,0] # Pins for Shutoff pins
+	GPIO.setmode(GPIO.BCM)
+	for pin in pins:
+			print(pin, "Setup")
+			GPIO.setup(pin, GPIO.OUT)
+			GPIO.output(pin,GPIO.LOW)
 	wave = Gesture(pins,i2c)
 	try:
 		while True:
+			print("------ New Wave --------")
 			wave.update()
-			print(wave.pos)
+			print(f"Positions: {wave.pos}")
+			print(f"Time: {wave.time}")
+			print(f"Speed: {wave.dir*wave.spd}")	
+			print(f"Waves: {wave.waves}")	
+			print("----------------")		
 			sleep(1)
 	except KeyboardInterrupt:
 		wave.stop()

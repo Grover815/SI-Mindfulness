@@ -30,13 +30,13 @@ class DisplayGUI():
 		# Get drawing object to draw on image.
 		draw = ImageDraw.Draw(image)
 		#import font
-		font = ImageFont.load_default(size = 8)
+		font = ImageFont.load_default()
 		#define starting position
 
 
 		# Draw a black filled box to clear the image.
 		draw.rectangle((0, 0, width, height), outline=0, fill=0)
-		draw.text((0,0),messages[message],font=font,fill = 255)
+		draw.text((0,0),messages[int(message)],font=font,fill = 255)
 		
 		#display image
 		self.disp.image(image)

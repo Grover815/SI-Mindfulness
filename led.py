@@ -134,6 +134,27 @@ class ColorGroup:
 			return
 '''
 
+class WhiteLEDs:
+
+	def __init__(self, pin):
+		self.pin = pin
+		GPIO.setup(self.pin, GPIO.OUT)
+
+	def on(self, DC):
+		GPIO.output(self.pin, GPIO.HIGH)
+
+	def slowdown(self):
+		GPIO.output(self.pin, GPIO.LOW)
+		self.pwm = GPIO.PWM(self.pin,1000)
+		self.pwm.start(100)
+		for i in range(0,1000):
+			DC = 100 - (i/10)
+			self.pwm.ChangeDutyCycle(DC)
+			sleep(0.001)
+		self.pwm.stop()
+
+
+
 ##pins = [] # Pins for Shutoff pins
 ##ledpins = [] # LED power pins for sensor LEDS
 ##LED_instance = []
@@ -163,7 +184,7 @@ class ColorGroup:
 if __name__ == "__main__":
 	from distance import Gesture
 	GPIO.cleanup()
-	led_pins = [14, 15, 18, 23, 24]
+	sensor_led_pins = [14, 15, 18, 23, 24]
 	LEDS = []
 	for i in led_pins:
 	        LEDS.append(Led(i))

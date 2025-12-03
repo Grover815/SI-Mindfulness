@@ -36,10 +36,12 @@ class DisplayGUI():
 
 		# Draw a black filled box to clear the image.
 		draw.rectangle((0, 0, width, height), outline=0, fill=0)
-		text = messages[int(message)]
-		bbox = font.getbbox(text)
-		(font_width, font_height) = bbox[2] - bbox[0], bbox[3] - bbox[1]
-		draw.text( (width // 2 - font_width // 2, height // 2 - font_height // 2),text,font=font,fill = 255)
+		text = messages[int(message)].split('\n')
+		for i in text:
+	
+			bbox = font.getbbox(i)
+			(font_width, font_height) = bbox[2] - bbox[0], bbox[3] - bbox[1]
+			draw.text( (width // 2 - font_width // 2, height // 2 - font_height*(len(text)-text.index(i))//2+5*text.index(i)),i,font=font,fill = 255)
 		
 		#display image
 		self.disp.image(image)

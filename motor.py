@@ -21,9 +21,6 @@ class Stepper:
 	deceleration = 0.1 # how many rps to decrease each step
 	acceleration = 0.1 # how many rps to increase each step
 
-	friction = 0.1
-
-
 
 	# Initializing Instance Variables 
 	def __init__(self,pins,connection):
@@ -82,7 +79,7 @@ class Stepper:
 
 			if self.spd == targetSpeed:
 				targetSpeed_time = time.time()
-				if time.time() - targetSpeed >= 5:
+				if time.time() - targetSpeed >= 10:
 					targetSpeed = 0
 
 			if abs(self.spd) >= self.min_speed: # if it is set below min speed the motor will stop i.e. to 0
@@ -91,13 +88,13 @@ class Stepper:
 
 			if self.conn.poll():
 				msg = self.conn.recv()
-				logger.info(f"{current_process().name} Received: {msg}")
 				if msg == "END":
 				    break
 				if msg == "GET":
 					self.conn.send([self.step,self.speed_max])
 				if type(msg) == float: # More validation on speed input? In main logic perhaps
 					if abs(msg) != targetSpeed:  # if a new target speed has been sent
+						logger.info(f"{current_process().name} Received New Speed: {msg}")
 						if abs(msg) > self.speed_max:
 							self.speed_max = abs(msg)
 						targetSpeed = msg

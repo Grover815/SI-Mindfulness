@@ -2,16 +2,16 @@
 
 import RPi.GPIO as GPIO
 from time import sleep
-#import random
+import config
 
 class Led:
 
 	def __init__(self,pin):
 		self.pin = pin
 		self.brightness = 100 # 0-100 exclusive mapped to duty cycle
-		self.red_pin = 26
-		self.green_pin = 19
-		self.blue_pin = 13
+		self.red_pin = config.cfg('LED','red_pin')
+		self.green_pin = config.cfg('LED','green_pin')
+		self.blue_pin = config.cfg('LED','blue_pin')
 		#GPIO.setup(pin, GPIO.OUT) # LED PIN number
 		self.pwm = GPIO.PWM(pin,1000)
 		GPIO.setup(self.red_pin, GPIO.OUT) #R

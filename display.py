@@ -2,6 +2,9 @@
 from PIL import Image, ImageDraw, ImageFont
 from logs import setup_logger
 
+from multiprocessing import current_process
+
+
 class DisplayGUI():
 
 	# Initialize disp object from adafruit library, pass disp object from main
@@ -161,7 +164,17 @@ if __name__ == '__main__':
 	import board
 	import busio
 	import adafruit_ssd1306
+	from time import sleep
+	from multiprocessing import Process, Pipe, current_process
 	i2c = busio.I2C(board.SCL,board.SDA)
 	disp = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c,addr=0x3d)
-	GUI = DisplayGUI(disp)
-	GUI.writeMessage(0)
+	GUI_parent,GUI_child = Pipe()
+	GUI = DisplayGUI(disp,GUI_child)
+	p1 = Process(target=GUI.message,name="GUI")
+	p1.start()
+	GUI_parent.send("Welcome\nto the\nStand N' Wave")
+	sleep(5)
+	GUI_parent.send("Wave your hand near \n the base to begin \n your experience")
+	p1.join()
+
+

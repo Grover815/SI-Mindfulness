@@ -9,6 +9,7 @@ class Led:
 	def __init__(self,pin):
 		self.pin = pin
 		self.brightness = 100 # 0-100 exclusive mapped to duty cycle
+		self.colors = ['G', 'B', 'R']
 		self.red_pin = config.cfg('LED','red_pin')
 		self.green_pin = config.cfg('LED','green_pin')
 		self.blue_pin = config.cfg('LED','blue_pin')
@@ -33,6 +34,7 @@ class Led:
 		GPIO.output(self.red_pin, GPIO.LOW)
 
 	def on(self, color, DC):
+		color = self.colors[color]
 		if color == 'G':
 			self.green()
 		if color == 'B':

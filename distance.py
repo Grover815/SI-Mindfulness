@@ -12,11 +12,11 @@ import config
 class Gesture():
 
 	
-	max_distance = config.cfg('VL53L0X','detection_max') # Maximum distance to detect object
-	min_distance = config.cfg('VL53L0X','detection_min') # Minimum distance to detect object
-	sensor_distance = config.cfg('VL53L0X','sensor_distance') # distance between first and last sensor
-	max_speed = config.cfg('VL53L0X','max_speed') #11 # units? do testing for maximum hand wave speed
-	min_speed = config.cfg('VL53L0X','min_speed')
+	max_distance = int(config.cfg('VL53L0X','detection_max')) # Maximum distance to detect object
+	min_distance = int(config.cfg('VL53L0X','detection_min')) # Minimum distance to detect object
+	sensor_distance = int(config.cfg('VL53L0X','sensor_distance')) # distance between first and last sensor
+	max_speed = int(config.cfg('VL53L0X','max_speed')) #11 # units? do testing for maximum hand wave speed
+	min_speed = int(config.cfg('VL53L0X','min_speed'))
 
 
 	def __init__(self,xshut,i2c):
@@ -24,7 +24,8 @@ class Gesture():
 		self.vl53 = []
 		self.pos = [0 for i in range(0,len(xshut))]
 		self.history = [[0 for i in range(0,len(xshut))] for i in range(0,300)] # keep the last 10 cycles of data
-		self.time = [0 for i in range(0,len(xshut))]
+		self.timeOn = [0 for i in range(0,len(xshut))]
+		self.timeOff = [0 for i in range(0,len(xshut))]
 		self.triggered = [False for i in range(0,len(xshut))]
 		self.spd = 0
 		self.dir = 0 # -1 for left, 1 for right
@@ -59,22 +60,24 @@ class Gesture():
 		return (distance > self.min_distance) and (distance < self.max_distance)
 
 	def position(self):
+		self.posPrev = self.pos
 		for i, sensor in enumerate(self.vl53):
-			#print("time +", self.time)
+			#print("time +", self.timeOn)
 			distance = sensor.range
 			if self.is_valid(distance):
 				self.pos[i] = 1
-				self.time[i] = time.time()
+				self.timeOn[i] = time.time()
 			else:
 				self.pos[i] = 0
+				self.timeO[i] = time.time()
 
 	def direction(self):
-		self.dir = 1 if (self.time[0]-self.time[-1] < 0) else -1
+		self.dir = 1 if (self.timeOn[0]-self.timeOn[-1] < 0) else -1
 
 	def speed(self):
 		try:
 
-			self.spd = self.sensor_distance/abs(self.time[0]-self.time[-1]) 
+			self.spd = self.sensor_distance/abs(self.timeOn[0]-self.timeOn[-1]) 
 			#print(self.spd)
 			# if speed detected greater than maximum speed, set to maximum speed, this will let the motor speed be properly bounded as well
 			if self.spd > self.max_speed: 
@@ -86,12 +89,12 @@ class Gesture():
 
 
 	def update(self):
-		if 0 not in self.time:
+		if 0 not in self.timeOn:
 			self.position()
 			self.history.pop(0)
 			self.history.append(self.pos)
 		else:
-			self.time = [1,1,1]
+			self.timeOn = [1,1,1]
 		
 		for i,ele in enumerate(self.pos): 
 			if ele == 1:
@@ -100,7 +103,7 @@ class Gesture():
 				#print(self.triggered)
 		
 		if False not in self.triggered: # only update speed and direction if all three sensors have been triggered and in a "wave" motion by comparing times
-			if (self.time[0] <= self.time[1] <= self.time[2]): # Interval comparison
+			if (self.timeOn[0] <= self.timeOn[1] <= self.timeOn[2]): # Interval comparison
 				self.waves += 1
 				#print(f"New Wave: {self.waves}")
 				#print("Direction: Positive")
@@ -108,7 +111,7 @@ class Gesture():
 				self.speed()
 				#print(f"Speed: {self.dir*self.spd}")
 				self.triggered = [False for i in range(0,len(self.triggered))]
-			if (self.time[0] >= self.time[1] >= self.time[2]):
+			if (self.timeOn[0] >= self.timeOn[1] >= self.timeOn[2]):
 				self.waves += 1
 				#print(f"New Wave: {self.waves}")
 				#print("Direction: Negative")

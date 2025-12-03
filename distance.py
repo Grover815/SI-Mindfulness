@@ -4,6 +4,7 @@ import adafruit_vl53l0x
 from time import sleep
 import RPi.GPIO as GPIO
 import time
+import config
 
 
 
@@ -11,11 +12,11 @@ import time
 class Gesture():
 
 	
-	max_distance = 300 # Maximum distance to detect object
-	min_distance = 0 # Minimum distance to detect object
-	sensor_distance = 1 # distance between first and last sensor
-	max_speed = 350 #11 # units? do testing for maximum hand wave speed
-	min_speed = 0
+	max_distance = config.cfg('VL53L0X','detection_max') # Maximum distance to detect object
+	min_distance = config.cfg('VL53L0X','detection_min') # Minimum distance to detect object
+	sensor_distance = config.cfg('VL53L0X','sensor_distance') # distance between first and last sensor
+	max_speed = config.cfg('VL53L0X','max_speed') #11 # units? do testing for maximum hand wave speed
+	min_speed = config.cfg('VL53L0X','min_speed')
 
 
 	def __init__(self,xshut,i2c):
@@ -28,6 +29,8 @@ class Gesture():
 		self.spd = 0
 		self.dir = 0 # -1 for left, 1 for right
 		self.waves = 0
+		self.spd_total = 0
+		self.spd_count = 0
 
 
 		
@@ -76,6 +79,8 @@ class Gesture():
 			# if speed detected greater than maximum speed, set to maximum speed, this will let the motor speed be properly bounded as well
 			if self.spd > self.max_speed: 
 				self.spd = self.max_speed
+			self.spd_total+=self.spd
+			self.spd_count+=1
 		except ZeroDivisionError:
 			self.spd = 0
 
@@ -146,4 +151,3 @@ if __name__ == '__main__':
 		GPIO.cleanup()
 		i2c.unlock()
 		print("Program Terminated by User.")
-		

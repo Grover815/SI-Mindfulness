@@ -2,14 +2,14 @@
 
 from motor import Stepper
 from led import Led, ColorGroup
-from display import DisplayGUI
+#from display import DisplayGUI
 from distance import Gesture
 
 # Circuit Python Implementation for I2C Access
 import board
 import busio
 #import adafruit_vl53l0x
-import adafruit_ssd1306
+#import adafruit_ssd1306
 
 from time import sleep
 import time
@@ -55,6 +55,10 @@ p1 = None
 p2 = None
 '''
 
+def writeMessage(message):
+	with open('/home/lemmondpi/Documents/html/index.html', 'w') as file:
+	    file.write(f'<html><body style="background-color: #e897cc; font-size:100;"><h1 style="text-align:center; color:white;">{message}</h1></body></html>')
+
 def error_handler(e,debug=True):
 	logger = setup_logger()
 	logger.info("Error handler")
@@ -66,6 +70,7 @@ def error_handler(e,debug=True):
 # Linear transformation of a variable between two scales X and Y
 def transform(x1,x2,y1,y2,i):
 	return ((y2-y1)/(x2-x1))*(i-x1)+y1
+
 
 
 def main():
@@ -159,7 +164,7 @@ def main():
 	# Startup LED Sequence
 	for ld in LEDS:
 		ld.on('B',75)
-	#	sleep(0.15)
+		sleep(0.25)
 
 	#GUI.write("Welcome\nto the\nStand N' Wave")
 	#sleep(3)
@@ -223,7 +228,10 @@ def main():
 							waveSpdAve = wave.spd_total/wave.spd_count
 							message_seed = np.floor(transform(wave.min_speed,wave.max_speed,0,5,waveSpdAve)) # Are messages ordered from calm to agitated?
 							#GUI.write(int(message_seed))
+							messages = ["Resistance makes success worthwhile.","I am capable of succedding.","This too shall pass.","Everything is as it is.","Quiet the mind and the soul will speak.","My grades do not define me."]
+							writeMessage(messages[int(message_seed)])
 							logger.info(f"Message seed: {message_seed} from {wave.spd}")
+							logger.info(f"Message: {messages[int(message_seed)]}")
 						except:
 							logger.info("No Data to Seed Message")
 					if timer <=  timeout+10 and not endSequenceTriggered[2]:
@@ -233,17 +241,19 @@ def main():
 						motor1_stats = [None,None]
 						motor2_stats = [None,None]
 						motor1_parent.send("GET")
+						sleep(0.25)
 						if motor1_parent.poll():
 							motor1_stats = motor1_parent.recv()
 							logger.info(f"Motor 1 Stats Received: {motor1_stats}")
-						rev1 = motor1_stats[0]
+						step1 = motor1_stats[0]
 						motorSpdAve1 = motor1_stats[1]
 
 						motor2_parent.send("GET")
+						sleep(0.25)
 						if motor2_parent.poll():
 							motor2_stats = motor2_parent.recv()
 							logger.info(f"Motor 2 Stats Received: {motor2_stats}")
-						rev2 = motor2_stats[0]
+						step2 = motor2_stats[0]
 						motorSpdAve2 = motor2_stats[1]
 
 						waveCount = wave.waves
@@ -262,10 +272,10 @@ def main():
 							stressLevel = "No Data to Seed Stress Level"
 
 						runtime = loop_time
-
-						stats = [f"Total Revolutions: {rev1}/{rev2}", f"Average Speed (rps): {motorSpdAve1}/{motorSpdAve2}", f"Runtime (s): {runtime}",f"http://10.160.137.193/"]
+						logger.info("----Stats Calculated----")
+						stats = [f"Total Steps: {step1}/{step2}", f"Average Speed (rps): {motorSpdAve1}/{motorSpdAve2}", f"Runtime (s): {runtime}",f"http://10.160.137.193/"]
 						logger.info(f"Runtime: {runtime}")
-						logger.info(f"Total Revolutions: {rev1}/{rev2}")
+						logger.info(f"Total Revolutions: {step1}/{step2}")
 						logger.info(f"Average Speed (rps): {motorSpdAve1}/{motorSpdAve2}")
 						#GUI.showStats(stats)
 
@@ -274,7 +284,7 @@ def main():
 						while os.path.exists(f"logs/stats{j:02}.csv"):
 							j+=1
 						titles = ['Total Runtime (s)','Stress Level','Average Wave Speed (mm/s)','Wave Count','Total Steps (M1)', 'Average Motor Speed (M1) (rps)','Total Steps (M2)', 'Average Motor Speed (M2) (rps)','Loop Count','Average Loop Completion Time (s)']
-						data = [runtime,stressLevel,waveSpdAve,waveCount,rev1,motorSpdAve1,rev2,motorSpdAve2,loop_count,loop_time/loop_count]
+						data = [runtime,stressLevel,waveSpdAve,waveCount,step1,motorSpdAve1,step2,motorSpdAve2,loop_count,loop_time/loop_count]
 						with open(f"logs/stats{j:02}.csv",mode="w",newline="") as file:
 							writer = csv.writer(file)
 							writer.writerows(zip(titles,data))
@@ -282,7 +292,7 @@ def main():
 					if timer <= timeout+20 and not endSequenceTriggered[3]:
 						endSequenceTriggered[3] = True
 						#GUI.write("Stand N' Wave will begin shutdown in 10 seconds \n unless user input is detected...")
-					if timer <= timeout+30 and not endSequenceTriggered[4]:
+					if timer <= timeout+50 and not endSequenceTriggered[4]:
 						endSequenceTriggered[4] = True
 						#GUI.write("Shutting Down...")
 						running = False
@@ -333,7 +343,7 @@ def main():
 	#GUI.write("Stand 'N Wave is\nnow safe to unplug.")
 	GPIO.cleanup()
 	logger.info("------- End of Program -------")
-	#os.system("sudo shutdow now")
+	#os.system("sudo reboot now")
 
 if __name__ == '__main__':
 	main()

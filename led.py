@@ -10,9 +10,12 @@ class Led:
 		self.pin = pin
 		self.brightness = 100 # 0-100 exclusive mapped to duty cycle
 		self.colors = ['G', 'B', 'R']
-		self.red_pin = config.cfg('LED','red_pin')
-		self.green_pin = config.cfg('LED','green_pin')
-		self.blue_pin = config.cfg('LED','blue_pin')
+		self.red_pin = int(config.cfg('LED','red_pin'))
+		self.green_pin = int(config.cfg('LED','green_pin'))
+		self.blue_pin = int(config.cfg('LED','blue_pin'))
+		#self.red_pin = 13
+		#self.green_pin = 19
+		#self.blue_pin = 26
 		#GPIO.setup(pin, GPIO.OUT) # LED PIN number
 		self.pwm = GPIO.PWM(pin,1000)
 		GPIO.setup(self.red_pin, GPIO.OUT) #R
@@ -34,7 +37,6 @@ class Led:
 		GPIO.output(self.red_pin, GPIO.LOW)
 
 	def on(self, color, DC):
-		color = self.colors[color]
 		if color == 'G':
 			self.green()
 		if color == 'B':
@@ -93,7 +95,7 @@ class ColorGroup:
 		GPIO.output(red_pin, GPIO.LOW)
 	'''
 	def pattern(self, color, position):
-		color = color 
+		#color = color 
 		if all(x == 0 for x in position):
 			hold = False
 			return hold
@@ -112,6 +114,7 @@ class ColorGroup:
 					else:
 						DC = 0
 				self.leds[i].on(color, DC)
+			#sleep(0.1)
 			sleep(0.1)
 			for i in self.leds:
 				i.off()
@@ -184,16 +187,29 @@ class WhiteLEDs:
 ##		GPIO.cleanup()
 ##		print("Program Terminated by User.")
 if __name__ == "__main__":
-	from distance import Gesture
+	#from distance import Gesture
 	GPIO.cleanup()
 	sensor_led_pins = [14, 15, 18, 23, 24]
 	LEDS = []
-	for i in led_pins:
-	        LEDS.append(Led(i))
-
+	GPIO.setmode(GPIO.BCM)
+	for pin in sensor_led_pins:
+		GPIO.setup(pin,GPIO.OUT)
+		GPIO.output(pin,GPIO.LOW)
+	for i in sensor_led_pins:
+		LEDS.append(Led(i))
 	sensor_LEDS = ColorGroup(LEDS)
-	pos = [0,0,1]
+	pos = [1,0,0]
 	sensor_LEDS.pattern('B', pos)
+	GPIO.cleanup()
+	'''
+	pos = [0,0,0]
+	for i in range(0,3):
+		pos[i] = 1
+		print(f"Position: {pos}")
+		for j in ['R','G','B']:
+			print(f"Color: {j}")
+			sensor_LEDS.pattern(j, pos)
+		pos = [0,0,0]
 
 	##for j in LEDS:
 	##        j.on("R", 100)
@@ -202,6 +218,7 @@ if __name__ == "__main__":
 	##        j.off()
 	        
 	print("All done.")
+	'''
 
 
 		

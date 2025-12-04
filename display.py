@@ -3,16 +3,15 @@ from PIL import Image, ImageDraw, ImageFont
 from logs import setup_logger
 
 from multiprocessing import current_process
-
+import numpy as np
 
 class DisplayGUI():
 
 	# Initialize disp object from adafruit library, pass disp object from main
-	def __init__(self,display,connection):
+	def __init__(self,display):
 		self.disp = display
 		self.width = display.width
 		self.height = display.height
-		self.conn = connection
 
 
 	# Function to write message
@@ -51,9 +50,55 @@ class DisplayGUI():
 		self.disp.image(image)
 		self.disp.show()
 
+	def wave(self):
+		for i in range(0,128):
+			self.disp.pixel(i, 15*np.sin(0.1*i)+30, 1)
+		self.disp.display()
 		
 	def write(self,message):
 		logger = setup_logger()
+
+		text = None
+		if type(message) == int:
+
+			'''Takes in one of our mindfullness messages and displays it indefinately'''
+			messages = ["Resistance makes\nsuccess worthwhile.","I am capablre of\nsuccedding.","This too shall pass.","Everything is as it\nis.",
+			"Quiet the mind and\nthe soul will speak.",
+			"My grades do not\ndefine me."]
+			text = messages[int(message)].split('\n')
+		if type(message) == str:
+			text=message.split('\n')
+		logger.info(f"GUI Received: {text}")
+		# Clear display.
+		self.disp.fill(0)
+		self.disp.show()
+
+		# Create blank image for drawing.
+		# Make sure to create image with mode '1' for 1-bit color.
+		width = self.disp.width
+		height = self.disp.height
+		image = Image.new("1", (width, height))
+
+		# Get drawing object to draw on image.
+		draw = ImageDraw.Draw(image)
+		#import font
+		font = ImageFont.load_default()
+		#define starting position
+
+
+		# Draw a black filled box to clear the image.
+		draw.rectangle((0, 0, width, height), outline=0, fill=0)
+		
+		for i in text:
+		
+			bbox = font.getbbox(i)
+			(font_width, font_height) = bbox[2] - bbox[0], bbox[3] - bbox[1]
+			draw.text( (width // 2 - font_width // 2, height // 2 - font_height*(len(text)-text.index(i))//2+5*text.index(i)),i,font=font,fill = 255)
+		
+		#display image
+		self.disp.image(image)
+		self.disp.show()
+		'''logger = setup_logger()
 		logger.info(f"Write message: {message}")
 		
 		# Clear display.
@@ -79,9 +124,10 @@ class DisplayGUI():
 		
 		#display image
 		self.disp.image(image)
-		self.disp.show()
+		self.disp.show()'''
 	
 	# Multiprocess implementation of writeMessage() and write()
+	'''
 	def message(self):
 		logger = setup_logger()
 		logger.info(f"{current_process().name} running...")
@@ -92,7 +138,7 @@ class DisplayGUI():
 				text = None
 				if type(msg) == int:
 
-					'''Takes in one of our mindfullness messages and displays it indefinately'''
+					#Takes in one of our mindfullness messages and displays it indefinately
 					messages = ["Resistance makes\nsuccess worthwhile.","I am capablre of\nsuccedding.","This too shall pass.","Everything is as it\nis.",
 					"Quiet the mind and\nthe soul will speak.",
 					"My grades do not\ndefine me."]
@@ -128,7 +174,7 @@ class DisplayGUI():
 				#display image
 				self.disp.image(image)
 				self.disp.show()
-
+	'''
 
 	def showStats(self,stats):
 		'''Takes in a list of stats such as total RPM's, cycle time, max speed, etc 
@@ -165,10 +211,8 @@ if __name__ == '__main__':
 	import busio
 	import adafruit_ssd1306
 	from time import sleep
-	from multiprocessing import Process, Pipe, current_process
 	i2c = busio.I2C(board.SCL,board.SDA)
-	disp = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c,addr=0x3d)
-	GUI_parent,GUI_child = Pipe()
+	disp = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c,addr=0x30)
 	GUI = DisplayGUI(disp,GUI_child)
 	p1 = Process(target=GUI.message,name="GUI")
 	p1.start()
